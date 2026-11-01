@@ -1,0 +1,12 @@
+target/
+.env
+*.log
+.idea/
+*.iml
+.vscode/
+node_modules/
+frontend/src/main/bundles/
+frontend/src/main/frontend/generated/
+frontend/vite.generated.ts
+frontend/package.json
+frontend/package-lock.json
