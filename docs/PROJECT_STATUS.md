@@ -50,3 +50,32 @@ Dependency order: (1) approvals above -> (2) V2 / Flyway wiring [Divay] -> (3) b
 | Hosting limits unknown | Divay verifies before Day 8 |
 | Map component licence unverified | Evaluate before Day 7 |
 | Claude API cost/privacy | Document transmitted fields, rate limit, fallback |
+
+## Day 2 status (5 Nov 2026) - implemented on branches, NOT merged, NOT approved
+Work was prepared in three separate branches so ownership stays clean. Nothing below is an approval: the register above is unchanged, and Divay's formal review of D1-D6 is not recorded.
+
+| Branch | Owner of files | Contents |
+|---|---|---|
+| `feature/day2-backend-frontend` | Neha | `backend/`: JPA, PostgreSQL driver, Flyway starter, Maven resources mapping `../database/*`, config via env vars, `GET /api/system/status`, unit tests. `frontend/`: Vaadin 25 project, REST client, status page, unit tests. |
+| `feature/day2-database` | Divay (prepared for his review) | `database/migrations/V2-V4`, `database/seed/R__dev_seed.sql`, `database/queries/day2_checks.sql`, `database/README.md`; `deployment/docker/`: DB port bound to loopback, extended `.env.example`. |
+| `docs/day2-status` | shared | This section only. |
+Merge order: database branch first, then backend/frontend (the backend build copies `../database/migrations`).
+
+### What was actually verified (sandbox: PostgreSQL 16.15 + PostGIS 3.4 installed natively, no Docker)
+- V1..V4 applied in order to empty databases with `psql -v ON_ERROR_STOP=1`: all succeeded.
+- `database/queries/day2_checks.sql`: 22 of 22 checks passed on an empty database and on a seeded one (invalid enum values, duplicate emails ignoring case, bad dates, negative population, FK and RESTRICT behaviour, resource shelf-life rule, duplicate warehouse code, spatial indexes, PostGIS).
+- Seed loaded twice: first run 3 organisations, 8 users, 2 disasters, 3 affected areas, 8 resources, 3 warehouses; second run inserted 0 rows (idempotent).
+- Both `pom.xml` files are well-formed XML; `docker-compose.yml` parses as YAML.
+- `javac` 21 on all 12 Java files: 151 errors, all caused by missing libraries (JUnit, Spring, Vaadin, Mockito); no error in our own code. This is a weak syntax-level check only.
+
+### NOT verified (must be run by the team)
+- `./mvnw test` / `mvn compile` for backend and frontend: Maven could not download anything. Exact error: `Non-resolvable parent POM ... Could not transfer artifact org.springframework.boot:spring-boot-starter-parent:pom:4.1.2 from/to central (https://repo.maven.apache.org/maven2)` (sandbox has no access to Maven Central).
+- Real Flyway execution (Flyway CLI unobtainable in the sandbox); the SQL was applied with `psql` in Flyway order instead.
+- `docker compose up` (Docker not installed in the sandbox), backend and frontend startup, `GET /api/system/status`, the Vaadin page, and all Java unit tests.
+- Unconfirmed names/versions: `spring-boot-starter-flyway`, `flyway-database-postgresql` under Boot 4.1.2, and `vaadin.version` 25.3.4 (change to the newest 25.x if resolution fails).
+
+### Open points from Day 2
+- Resource catalogue is seeded as dev data without `is_demo`; is it reference data that should be a versioned migration? (Divay)
+- `warehouses.capacity_m3` unit is a proposal. (Divay)
+- Docs on `main` are still the pre-correction Day 1 v0.2 (A16 wording, ownership banners); the corrected versions have not been committed.
+- Hibernate Spatial dependency and JPA entities are intentionally deferred to Day 3.
