@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 5 Nov 2026 (Day 1 review corrections). No application code written; no existing repository file modified; nothing built or tested.
+Last updated: 11 Nov 2026 (Day 3 code written on `feature/day3-auth-disasters`; see "Day 3 status" at the end). Day 1-2 approvals below are still PENDING: only Neha and Divay can record them.
 
 ## Day 1 review outcome
 - Direction approved in principle. Docs v0.2 corrected as requested; approvals below still pending.
@@ -79,3 +79,50 @@ Merge order: database branch first, then backend/frontend (the backend build cop
 - `warehouses.capacity_m3` unit is a proposal. (Divay)
 - Docs on `main` are still the pre-correction Day 1 v0.2 (A16 wording, ownership banners); the corrected versions have not been committed.
 - Hibernate Spatial dependency and JPA entities are intentionally deferred to Day 3.
+
+## Day 3 status (11 Nov 2026) - implemented on `feature/day3-auth-disasters`, NOT merged, NOT built by Maven
+Scope: authentication, roles, disasters, affected areas (backend + Vaadin screens).
+
+### Backend (`backend/`)
+- Spring Security, stateless JWT (HS256), BCrypt. `POST /api/auth/login`, `GET /api/auth/me`. Wrong password, unknown email and disabled account return the same 401 message.
+- Server-side roles via `@PreAuthorize`: `@AdminOrOfficer` (create/update) and `@StaffOnly` (read). `GET /api/system/status` is now ADMIN-only (public liveness stays at `/actuator/health`).
+- `GET/POST/PUT /api/disasters`, `GET /api/disasters/{id}`, `GET/POST /api/affected-areas` with validation, paging (`page`, `size` max 100, whitelisted `sort`), filters, and one error format (RFC 9457 problem JSON + `code`).
+- Disasters and areas use SQL (`JdbcClient`) because of the PostGIS geography columns; Hibernate Spatial is still not added (deliberate).
+- `JWT_SECRET` is mandatory and has no default; the app refuses to start with a missing or short secret.
+
+### Frontend (`frontend/`)
+- Login page, route guard (everything except `/login` needs a login), role-aware menu, disaster list (filters, paging), create-disaster form, disaster detail with affected-area table and add-area dialog, admin-only status page (moved to `/status`). The token lives only in the server-side Vaadin session.
+
+### What was actually verified (sandbox: PostgreSQL 16 + PostGIS 3.4)
+- V1..V4 + seed apply cleanly; `day2_checks.sql` 22 of 22 pass; seed hash verifies against `Demo@12345`.
+- The exact SQL shapes used by the new repositories were run against PostGIS: insert with and without coordinates, filtered ranked paged read, update, the `CLOSED needs ended_at` constraint, the duplicate-area constraint (also with NULL district), unfiltered read.
+- Maven XML well-formed; `javac` found no syntax errors in any file (only errors caused by missing libraries).
+
+### NOT verified (must be run by the team)
+- `./mvnw test` in `backend/` and `frontend/` (Maven Central is blocked in the sandbox, so no Java was compiled or run). All new unit tests and `ApiSecurityIntegrationTest` are unrun.
+- Real login/create-disaster flow in a browser; Vaadin rendering.
+- Spring Boot 4 / Spring Security 7 / Vaadin 25 API names used from knowledge, not compiled.
+
+### Run it (after merging the database branch)
+1. `cd deployment/docker && cp .env.example .env`, set `DB_PASSWORD` and `JWT_SECRET`, `docker compose up -d`.
+2. Export the `.env` values, then `cd backend && ./mvnw spring-boot:run` (profile `dev` loads the demo seed).
+3. `cd frontend && ./mvnw spring-boot:run`, open http://localhost:8081, log in as `officer@demo.drrc.local` / `Demo@12345`.
+4. `cd backend && DB_PASSWORD=... ./mvnw test` runs the integration test too (without `DB_PASSWORD` it is skipped).
+
+### Assumptions made in Day 3 (need approval)
+| # | Assumption |
+|---|---|
+| T1 | "staff" (read access) = ADMIN, OFFICER, WAREHOUSE_MANAGER, FIELD_WORKER, NGO; VOLUNTEER and CITIZEN get 403 on disaster data. The contract does not define "staff". |
+| T2 | Only ADMIN and OFFICER create/update disasters and areas. |
+| T3 | Areas cannot be added to a CLOSED disaster (409 `INVALID_STATE`). |
+| T4 | `endedAt` allowed only when status is CLOSED, and required then (mirrors the DB constraint). |
+| T5 | Duplicate area name + district within a disaster returns 409 `DUPLICATE_AREA`. |
+| T6 | `/api/system/status` is ADMIN only. |
+| T7 | UI times are entered and shown in Asia/Kolkata. |
+| T8 | No refresh tokens; 1 hour access token (decision A6). |
+
+### Known follow-ups
+- Login rate limiting / lockout not implemented.
+- No session-id rotation on login in the Vaadin app.
+- No audit log of disaster changes yet (planned later).
+- Frontend has no end-to-end browser test.
