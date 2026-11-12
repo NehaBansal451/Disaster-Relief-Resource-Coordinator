@@ -1,6 +1,7 @@
 package com.disasterrelief.backend.disaster;
 
 import com.disasterrelief.backend.common.ApiException;
+import com.disasterrelief.backend.common.Coordinates;
 import com.disasterrelief.backend.common.FieldProblem;
 import java.util.ArrayList;
 import java.util.List;
