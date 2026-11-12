@@ -1,10 +1,14 @@
 package com.disasterrelief.backend.system;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Day 2 connectivity endpoint. Public for now; role-based security arrives with authentication (Day 3). */
+/**
+ * Connectivity endpoint. Day 3: restricted to ADMIN, because it reveals the PostGIS and migration versions.
+ * Unauthenticated liveness checks should use GET /actuator/health (status only).
+ */
 @RestController
 @RequestMapping("/api/system")
 public class SystemStatusController {
@@ -16,6 +20,7 @@ public class SystemStatusController {
     }
 
     @GetMapping("/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public SystemStatusResponse status() {
         return service.currentStatus();
     }
