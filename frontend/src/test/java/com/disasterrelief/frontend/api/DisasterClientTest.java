@@ -82,6 +82,7 @@ class DisasterClientTest {
                 .body("{\"status\":401,\"detail\":\"Authentication is required.\",\"code\":\"UNAUTHENTICATED\"}"));
         assertTrue(assertThrows(BackendException.class, () -> client.get("tok", 7)).isUnauthenticated());
 
+        server.reset();
         server.expect(requestTo(BASE + "/api/disasters/7")).andRespond(withStatus(HttpStatus.FORBIDDEN));
         assertTrue(assertThrows(BackendException.class, () -> client.get("tok", 7)).isForbidden());
     }
@@ -107,3 +108,4 @@ class DisasterClientTest {
         assertTrue(ex.isUnreachable());
     }
 }
+
