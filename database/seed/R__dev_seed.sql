@@ -77,3 +77,29 @@ FROM (VALUES
   ('SMN-01', 'DEMO Samana Depot',          'warehouse2@demo.drrc.local', 'Demo address, Samana',    500.00, 76.1900, 30.1500)
 ) AS w(code, name, mgr, addr, cap, lon, lat)
 ON CONFLICT (code) DO NOTHING;
+
+-- Day 4: demo emergency requests (fictional). Idempotent: skipped when the same description already exists.
+INSERT INTO need_requests (disaster_id, affected_area_id, resource_id, requested_by, quantity, affected_population,
+                           severity, description, status, approved_by, approved_at, is_demo)
+SELECT a.disaster_id, a.id, r.id, u.id, v.qty, v.pop, v.sev, v.descr, v.st, NULL, NULL, TRUE
+FROM (VALUES
+  ('Demo Khera Village', 'Drinking water',        5000, 1800, 'CRITICAL', 'DEMO: No drinking water for 1,800 people since the flood.', 'PENDING',  'field@demo.drrc.local'),
+  ('Demo Kalan Village', 'First-aid kit',           40,  900, 'MEDIUM',   'DEMO: Village clinic has run out of first-aid kits.',       'PENDING',  'field@demo.drrc.local'),
+  ('Demo Majra Village', 'Packaged food ration',  1500, 1500, 'HIGH',     'DEMO: Food stocks exhausted; road access is cut.',          'VERIFIED', 'ngo@demo.drrc.local')
+) AS v(area, res, qty, pop, sev, descr, st, requester)
+JOIN affected_areas a ON a.name = v.area
+JOIN resources r ON lower(r.name) = lower(v.res)
+JOIN users u ON lower(u.email) = v.requester
+WHERE NOT EXISTS (SELECT 1 FROM need_requests n WHERE n.description = v.descr);
+
+INSERT INTO request_history (request_id, action, from_status, to_status, actor_user_id, reason)
+SELECT n.id, 'CREATED', NULL, 'PENDING', n.requested_by, NULL
+FROM need_requests n
+WHERE n.is_demo AND NOT EXISTS (SELECT 1 FROM request_history h WHERE h.request_id = n.id AND h.action = 'CREATED');
+
+INSERT INTO request_history (request_id, action, from_status, to_status, actor_user_id, reason)
+SELECT n.id, 'VERIFIED', 'PENDING', 'VERIFIED', (SELECT id FROM users WHERE lower(email) = 'officer@demo.drrc.local'), NULL
+FROM need_requests n
+WHERE n.is_demo AND n.status = 'VERIFIED'
+  AND NOT EXISTS (SELECT 1 FROM request_history h WHERE h.request_id = n.id AND h.action = 'VERIFIED');
+
