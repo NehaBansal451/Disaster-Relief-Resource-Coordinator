@@ -6,6 +6,7 @@ import com.disasterrelief.frontend.session.UserSession;
 import com.disasterrelief.frontend.views.LoginView;
 import com.disasterrelief.frontend.views.StatusView;
 import com.disasterrelief.frontend.views.disasters.DisasterListView;
+import com.disasterrelief.frontend.views.requests.RequestListView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -41,7 +42,8 @@ public class MainLayout extends AppLayout {
         header.getStyle().set("padding", "0 var(--lumo-space-m)");
         addToNavbar(header);
 
-        VerticalLayout nav = new VerticalLayout(new RouterLink("Disasters", DisasterListView.class));
+        VerticalLayout nav = new VerticalLayout(new RouterLink("Disasters", DisasterListView.class),
+                new RouterLink("Requests", RequestListView.class));
         if (user != null && user.isAdmin()) {
             nav.add(new RouterLink("System status", StatusView.class));
         }

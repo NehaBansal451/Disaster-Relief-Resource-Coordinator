@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 11 Nov 2026 (Day 3 code written on `feature/day3-auth-disasters`; see "Day 3 status" at the end). Day 1-2 approvals below are still PENDING: only Neha and Divay can record them.
+Last updated: 13 Nov 2026 (Day 3 merged to `main`; Day 4 on `feature/day4-requests`; see "Day 3 status" and "Day 4 status" at the end). Day 1-2 approvals below are still PENDING: only Neha and Divay can record them.
 
 ## Day 1 review outcome
 - Direction approved in principle. Docs v0.2 corrected as requested; approvals below still pending.
@@ -126,3 +126,41 @@ Scope: authentication, roles, disasters, affected areas (backend + Vaadin screen
 - No session-id rotation on login in the Vaadin app.
 - No audit log of disaster changes yet (planned later).
 - Frontend has no end-to-end browser test.
+
+## Day 3 update (merged)
+Day 3 (auth, roles, disasters, affected areas, Vaadin login/list/create/detail) is merged to `main` (PRs #8, #9, plus the `vaadin-dev` fix). Backend `mvnw test`: BUILD SUCCESS. Frontend `mvnw test`: 18 tests pass. Manual run on Windows: login, disaster list, create disaster, add affected area all worked. Local ports: `DB_PORT=15432` because Windows blocked 5432 (`INTEGRATION_GUIDE.md`). Not yet run by anyone: `ApiSecurityIntegrationTest` (needs `DB_PASSWORD` in the environment). UI theme (Lumo) is not enabled yet: cosmetic, deferred.
+
+## Day 4 status (13 Nov 2026) - branch `feature/day4-requests`, NOT merged, NOT approved
+Checkpoint: "a request submitted in the UI is saved and retrieved from PostgreSQL".
+
+| Area | Owner | Delivered |
+|---|---|---|
+| Database | Divay (proposed by Neha) | `V5__need_requests.sql`: `need_requests`, `request_history`, composite FK so an area must belong to the request's disaster, reason/approval CHECKs, indexes; 3 demo requests in the dev seed; `queries/day4_checks.sql` |
+| Backend | Neha | Package `request`: `GET/POST /api/requests`, `GET /api/requests/{id}` (with history), `PATCH .../verify`, `.../approve`, `.../reject`, `.../cancel` per `API_CONTRACT.md` section 1; package `resource`: `GET /api/resources`; history row on every change; race-safe conditional status updates |
+| Frontend | Neha | Requests list (filters, paging), New request form (disaster -> area -> resource), request detail with history and role-aware Verify / Approve / Ask for clarification / Reject / Cancel |
+| Docs | shared | `PROJECT_BLUEPRINT.md`, `DATABASE_DESIGN.md`, `INTEGRATION_GUIDE.md`, `DEMO_SCRIPT.md` |
+
+### Verified in the sandbox (PostgreSQL 16 + PostGIS 3.4)
+- V1-V5 and the seed applied in order; seed re-run inserts 0 new rows (idempotent).
+- `day4_checks.sql`: 18 of 18 PASS (zero/negative quantity, blank/over-long description, bad severity/status, area from another disaster, unknown resource, reject/cancel without reason, approve without approver, score > 100, bad history action, RESTRICT delete). `day2_checks.sql`: still 22 of 22.
+- The repository SELECT/JOIN, history and conditional UPDATE statements run correctly on that database.
+
+### NOT verified (Maven Central is blocked in the sandbox; must be run locally)
+- `mvnw test` for backend and frontend (new: `RequestRulesTest`, `RequestServiceTest`, `RequestApiIntegrationTest`, `RequestClientTest`, `RequestActionsTest`). Java was written carefully but has not been compiled here.
+- The Vaadin screens have not been seen in a browser.
+
+### Assumptions added by Day 4 (need approval)
+| # | Assumption |
+|---|---|
+| R1 | Submit: OFFICER, FIELD_WORKER, NGO only. CITIZEN excluded until O4 is decided. |
+| R2 | Verify, approve, reject: OFFICER only (ADMIN excluded, O1 default). |
+| R3 | Cancel: officer any of PENDING/VERIFIED/APPROVED; requester only own PENDING. ALLOCATED and later cannot be cancelled yet (O3). |
+| R4 | REQUEST_CLARIFICATION is a history event only; status stays PENDING. |
+| R5 | `ADD` `affected_areas UNIQUE (id, disaster_id)` in V5 to enforce area/disaster consistency in the database (Divay to confirm). |
+| R6 | `GET /api/resources` added (read only) because the request form needs a catalogue; not in the original contract list. |
+| R7 | Priority fields are null and `priorityReasons` empty until Day 6. |
+| R8 | Approval note is accepted but not stored separately in Day 4 (stored as `status_reason`). |
+
+### Next: Day 5
+Inventory and shelter tables (Divay), inventory APIs/UI, shelters, dashboard queries (Neha). Prerequisite: Divay answers D1-D6 and approves V5.
+
