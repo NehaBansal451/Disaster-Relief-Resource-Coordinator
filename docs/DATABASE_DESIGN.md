@@ -9,7 +9,7 @@ Owner: Divay (proposals by Neha pending his review, decisions D1-D4 in `PROJECT_
 - Demo rows have `is_demo = TRUE` and descriptions starting `DEMO:`. The dev seed (`database/seed/R__dev_seed.sql`) runs only under the `dev` Spring profile and is idempotent.
 - Never edit an applied migration; add a new `V<n>`.
 
-## Built tables
+## Built tables (V1-V6)
 | Migration | Table | Purpose and key rules |
 |---|---|---|
 | V1 | `organizations` | NGOs/partners/government units. V2 adds contact fields. |
@@ -19,6 +19,9 @@ Owner: Divay (proposals by Neha pending his review, decisions D1-D4 in `PROJECT_
 | V4 | `resources` | Catalogue: category CHECK, `unit`, perishable with shelf-life rule, `active`. |
 | V4 | `warehouses` | Unique `code`, `location geography(Point)` + GIST, `capacity_m3` (unit is a proposal). |
 | V5 | `need_requests` | See below. |
+| V6 | `inventory` | Stock per warehouse x resource x batch; `CHECK (reserved <= on_hand)`; unique batch per warehouse; indexes on resource, warehouse, expiry. |
+| V6 | `inventory_transactions` | Append-only stock ledger (RECEIPT, RESERVE, RELEASE, DISPATCH, DELIVERY, ADJUSTMENT) with balances after each change; a trigger rejects UPDATE and DELETE. |
+| V6 | `shelters` | Capacity, occupancy (may exceed capacity = overcrowded), facilities, OPEN/CLOSED, `geography` location + GIST index. |
 | V5 | `request_history` | One row per workflow event; `action` CHECK (CREATED, VERIFIED, REJECTED, CLARIFICATION_REQUESTED, APPROVED, CANCELLED); indexed by request and actor. |
 
 ### `need_requests` (V5)
@@ -38,7 +41,7 @@ Race safety: the backend changes status with `UPDATE ... WHERE id = ? AND status
 ## Planned tables (blueprint section 8, not built yet)
 | Day | Tables |
 |---|---|
-| 5 | `inventory` (warehouse x resource, batch/expiry, `quantity_on_hand`, `quantity_reserved` with `reserved <= on_hand`), `inventory_transactions` (append-only ledger), `shelters` |
+| 5 | DONE in V6 (proposed): `inventory`, `inventory_transactions`, `shelters` |
 | 6 | `allocations`, `allocation_items` (version column for stale-recommendation detection), priority override records |
 | 7 | `dispatches`, `delivery_updates`, `audit_logs`, `alerts` |
 | 8+ | `volunteers`, `volunteer_assignments`, `ai_analyses`, `weather_records`, `awareness_resources` |
@@ -50,3 +53,9 @@ Stock rule to agree before Day 5 (D4): available = on_hand - reserved; dispatche
 
 ## Open points for Divay
 D1 Flyway ownership | D2 V2 content | D3 this ER baseline | D4 inventory constraints | resource catalogue as reference data vs dev seed | `capacity_m3` unit | V5 composite foreign key approach.
+
+## V7–V8 additions
+- `need_requests`: priority_reasons, priority_calculated_at, priority_overridden, priority_override_reason (checks: score and category set together; override needs a reason).
+- `allocations` (+ `allocation_items`, `allocation_not_selected`, `allocation_reservations`): one live allocation per request (partial unique index); allocated ≤ requested; version for stale protection.
+- `dispatches` (unique per allocation + warehouse), `delivery_updates`.
+- `audit_logs`: append-only (trigger). `alerts`: NEW/READ.

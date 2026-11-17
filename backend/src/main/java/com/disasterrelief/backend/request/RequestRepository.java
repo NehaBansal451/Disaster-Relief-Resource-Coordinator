@@ -1,5 +1,7 @@
 package com.disasterrelief.backend.request;
 
+import com.disasterrelief.backend.alert.AlertService;
+import com.disasterrelief.backend.audit.AuditLogger;
 import com.disasterrelief.backend.common.PageQuery;
 import com.disasterrelief.backend.common.PageResponse;
 import com.disasterrelief.backend.common.Severity;
@@ -26,7 +28,7 @@ public class RequestRepository {
             SELECT n.id, n.disaster_id, d.name AS disaster_name, n.affected_area_id, a.name AS area_name,
                    n.resource_id, r.name AS resource_name, r.unit, n.requested_by, u.full_name AS requester_name,
                    n.quantity, n.affected_population, n.severity, n.description, n.status, n.status_reason,
-                   n.priority_score, n.priority_category, n.approved_by, n.approved_at, n.created_at
+                   n.priority_score, n.priority_category, n.priority_reasons, n.approved_by, n.approved_at, n.created_at
             FROM need_requests n
             JOIN disasters d ON d.id = n.disaster_id
             JOIN affected_areas a ON a.id = n.affected_area_id
@@ -41,7 +43,7 @@ public class RequestRepository {
             rs.getLong("requested_by"), rs.getString("requester_name"),
             rs.getInt("quantity"), rs.getInt("affected_population"), Severity.valueOf(rs.getString("severity")),
             rs.getString("description"), RequestStatus.valueOf(rs.getString("status")), rs.getString("status_reason"),
-            rs.getBigDecimal("priority_score"), rs.getString("priority_category"), List.of(),
+            rs.getBigDecimal("priority_score"), rs.getString("priority_category"), reasons(rs.getString("priority_reasons")),
             rs.getObject("approved_by", Long.class), rs.getObject("approved_at", OffsetDateTime.class),
             rs.getObject("created_at", OffsetDateTime.class), List.of());
 
@@ -53,9 +55,24 @@ public class RequestRepository {
             rs.getObject("created_at", OffsetDateTime.class));
 
     private final JdbcClient jdbc;
+    private final AuditLogger audit;
+    private final AlertService alerts;
 
-    public RequestRepository(JdbcTemplate jdbcTemplate) {
+    public RequestRepository(JdbcTemplate jdbcTemplate, AuditLogger audit, AlertService alerts) {
         this.jdbc = JdbcClient.create(jdbcTemplate);
+        this.audit = audit;
+        this.alerts = alerts;
+    }
+
+    /** Priority reasons are stored as one text column, one reason per line. */
+    static List<String> reasons(String stored) {
+        return stored == null || stored.isBlank() ? List.of() : List.of(stored.split("\\n"));
+    }
+
+    /** Marks live recommendations of a request STALE (used when the request is cancelled). */
+    public void markAllocationsStale(long requestId) {
+        jdbc.sql("UPDATE allocations SET status = 'STALE', updated_at = now() WHERE request_id = :id AND status = 'RECOMMENDED'")
+                .param("id", requestId).update();
     }
 
     /** True when the area exists and belongs to the disaster. */
@@ -114,6 +131,19 @@ public class RequestRepository {
                 .param("id", requestId).param("action", action)
                 .param("from", from == null ? null : from.name()).param("to", to.name())
                 .param("actor", actor).param("reason", reason).update();
+        audit.log(actor, "REQUEST_" + action, "need_requests", requestId,
+                (from == null ? "" : from + " -> ") + to + (reason == null ? "" : ": " + reason));
+        if ("CREATED".equals(action)) {
+            String severity = jdbc.sql("SELECT severity FROM need_requests WHERE id = :id").param("id", requestId)
+                    .query(String.class).single();
+            if ("CRITICAL".equals(severity)) {
+                alerts.raise("CRITICAL_REQUEST", "CRITICAL", "Critical request #" + requestId + " needs verification.",
+                        "need_requests", requestId);
+            }
+        } else if ("APPROVED".equals(action)) {
+            alerts.raise("REQUEST_APPROVED", "MEDIUM", "Request #" + requestId + " is approved and ready for allocation.",
+                    "need_requests", requestId);
+        }
     }
 
     public Optional<RequestResponse> findById(long id) {

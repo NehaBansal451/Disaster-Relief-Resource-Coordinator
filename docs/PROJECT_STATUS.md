@@ -164,3 +164,42 @@ Checkpoint: "a request submitted in the UI is saved and retrieved from PostgreSQ
 ### Next: Day 5
 Inventory and shelter tables (Divay), inventory APIs/UI, shelters, dashboard queries (Neha). Prerequisite: Divay answers D1-D6 and approves V5.
 
+## Day 5 status (16 Nov 2026) - backend and database only, branch `feature/day5-inventory`, NOT merged, NOT approved
+Scope delivered this round: database and backend. Inventory UI, shelter views and the dashboard screen (frontend) are NOT built yet.
+
+| Area | Delivered |
+|---|---|
+| Database (proposed for Divay) | `V6__inventory_shelters.sql`: `inventory` (CHECK reserved <= on_hand), append-only `inventory_transactions` ledger (trigger blocks UPDATE/DELETE), `shelters` (spatial index); `R__dev_seed_day5.sql` (10 stock lines, opening ledger rows, 3 shelters incl. one overcrowded); `queries/day5_checks.sql` |
+| Backend | `GET /api/inventory` (filters warehouse/resource/expiringOnly, paging, sort), `GET /api/inventory/{id}/transactions`, `POST /api/inventory/receipts`, `GET /api/warehouses`, shelters (`GET` list/detail/alternatives, `POST`, `PATCH .../occupancy`), `GET /api/dashboard` |
+
+### Verified in the sandbox (PostgreSQL 16 + PostGIS 3.4)
+V1-V6 and both seed files applied; seed run twice inserts nothing new; `day5_checks.sql` 22 of 22 PASS, `day4_checks.sql` 18 of 18, `day2_checks.sql` 22 of 22. The inventory, dashboard, nearest-shelter and receipt-upsert SQL ran correctly on that database.
+
+### NOT verified (must be run locally)
+`mvnw test` for the new Java code (`InventoryRulesTest`, `InventoryServiceTest`, `ShelterRulesTest`, `DashboardApiIntegrationTest`): Maven Central is blocked in the sandbox.
+
+### Assumptions added by Day 5 (need approval)
+| # | Assumption |
+|---|---|
+| S1 | Stock receipts: ADMIN anywhere; WAREHOUSE_MANAGER only into the warehouse they manage. OFFICER can read stock but not receive. |
+| S2 | Shelter create: ADMIN, OFFICER. Occupancy update: ADMIN, OFFICER, FIELD_WORKER. Occupancy may exceed capacity (that is "overcrowded"). |
+| S3 | available = on_hand - reserved. Reserved stock stays on hand until dispatched (Day 7 deducts it with a DISPATCH ledger row). |
+| S4 | Perishable resources need a future expiry date on receipt; a batch cannot be re-received with a different expiry (409 `BATCH_EXPIRY_MISMATCH`). "Expiring soon" = within 30 days. |
+| S5 | The ledger is append-only; corrections will be ADJUSTMENT rows (Day 6+). |
+| S6 | `GET /api/warehouses` and `GET /api/dashboard` added; dashboard is open to all staff roles. |
+| S7 | Shelter alternatives = 5 nearest other OPEN shelters with free beds. |
+
+### Next: Day 6 (priority score, allocation, approval, concurrency test)
+
+
+## Day 6–7 status (priority, allocation, dispatch, audit, alerts, map)
+
+**Built:** V7 (priority + allocations) and V8 (dispatches, delivery updates, audit_logs, alerts) migrations; priority scoring (explainable, deterministic, officer override with reason); allocation recommend/approve/reject with FEFO reservation, fairness cap, stale-version protection and row-lock concurrency safety; dispatch → in transit → delivered with stock deduction and ledger; audit trail written in the same transaction; alerts (critical request, low stock, overcrowded shelter, approved, dispatched, delivered); `/api/map` data.
+
+**Verified:** migrations V1–V8 apply on PostGIS; DB rules checked (one live allocation per request, reserved ≤ on-hand, audit append-only). Day 5 backend starts and runs on the user's machine.
+
+**Not yet verified:** Day 6–7 Java compile and tests on the user's machine (sandbox cannot reach Maven Central). Integration tests `AllocationDispatchIntegrationTest` need DB_PASSWORD set.
+
+**Proposed assumptions (need approval):** only OFFICER may recommend/approve/reject allocations (ADMIN excluded); competing demand = other VERIFIED/APPROVED requests for the same resource; fairness = proportional cap; low stock = available ≤ 10% of on-hand; priority weights 0.40 severity / 0.30 population / 0.15 waiting time / 0.15 resource criticality, caps 5000 people / 72 h, category thresholds 80/60/40; all staff see all alerts.
+
+**New endpoints:** POST /api/requests/{id}/priority, PATCH /api/requests/{id}/priority-override; POST /api/allocations/recommendations, POST /api/allocations/{id}/approve|reject, GET /api/allocations/{id}, GET /api/allocations?requestId=; GET/POST /api/dispatches, PATCH /api/dispatches/{id}/status; GET /api/audit; GET /api/alerts, PATCH /api/alerts/{id}/read; GET /api/map.
