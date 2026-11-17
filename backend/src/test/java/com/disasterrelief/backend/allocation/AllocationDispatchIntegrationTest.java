@@ -50,6 +50,8 @@ class AllocationDispatchIntegrationTest {
     @Autowired
     private WebApplicationContext context;
     private MockMvc mvc;
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @BeforeEach
     void setUp() {
@@ -194,9 +196,10 @@ class AllocationDispatchIntegrationTest {
         long truck = resourceId("Light truck", officer);
         long ptl = warehouseId("PTL-01", officer);
 
+        jdbc.update("UPDATE need_requests SET status = 'CANCELLED', status_reason = 'IT cleanup', updated_at = now() WHERE description LIKE 'IT-request%' AND status IN ('VERIFIED','APPROVED')");
         json(mvc, "POST", "/api/inventory/receipts", wh1, "{\"warehouseId\":" + ptl + ",\"resourceId\":" + truck
                 + ",\"quantity\":10,\"batchRef\":\"IT-TRUCK\"}", 201);
-        String stock = getBody("/api/inventory?warehouseId=" + ptl + "&resourceId=" + truck + "&size=100", officer);
+        String stock = getBody("/api/inventory?resourceId=" + truck + "&size=100", officer);
         int available = 0;
         Matcher m = Pattern.compile("\"available\":(\\d+)").matcher(stock);
         while (m.find()) {
@@ -233,7 +236,7 @@ class AllocationDispatchIntegrationTest {
         assertEquals(1, ok, "exactly one approval may win");
         assertEquals(1, conflict, "the other must be refused with 409");
 
-        String after = getBody("/api/inventory?warehouseId=" + ptl + "&resourceId=" + truck + "&size=100", officer);
+        String after = getBody("/api/inventory?resourceId=" + truck + "&size=100", officer);
         long onHand = 0;
         long reserved = 0;
         Matcher o = Pattern.compile("\"onHand\":(\\d+),\"reserved\":(\\d+)").matcher(after);
