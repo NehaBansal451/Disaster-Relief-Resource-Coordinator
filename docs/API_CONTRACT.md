@@ -125,3 +125,23 @@ Audit event catalogue (each row: actor, role, entity, id, timestamp, before/afte
 
 ## 7. Open contract decisions
 O1 ADMIN may approve requests? (default no) | O2 self-approval ban (proposed) | O3 cancellation after ALLOCATED, dispatch cancellation, stock release | O4 public citizen reporting | O5 priority recalculation as waiting time grows | O6 residual quantity after partial allocation (request is ALLOCATED while `unfilledQty` > 0; how the remainder is served) | O7 may the same officer verify and approve one request (currently yes).
+
+## 8. Endpoints added on Days 5-10 (backend built; frontend not built)
+All errors are `application/problem+json` with a stable `code`. Lists use `{content[], page, size, totalElements, totalPages}`. Roles: ADM admin, OFF officer, WHM warehouse manager, FLD field worker, NGO, VOL volunteer. "staff" = ADM, OFF, WHM, FLD, NGO.
+
+| Area | Endpoint | Roles | Notes |
+|---|---|---|---|
+| Resources/warehouses | GET `/api/resources`, `/api/warehouses` | staff | |
+| Inventory | GET `/api/inventory`, GET `/api/inventory/{id}/transactions`, POST `/api/inventory/receipts` | staff read; WHM (own warehouse) or ADM receive | batchRef optional (required for perishable); ledger is append-only |
+| Shelters | GET/POST `/api/shelters`, GET `/{id}`, GET `/{id}/alternatives`, PATCH `/{id}/occupancy` | staff (create ADM/OFF) | overcrowded = occupancy above capacity; raises an alert |
+| Dashboard | GET `/api/dashboard` | staff | |
+| Priority | POST `/api/requests/{id}/priority`, PATCH `/api/requests/{id}/priority-override` | OFF | automatic on verify; override needs a reason |
+| Allocation | POST `/api/allocations/recommendations`, POST `/{id}/approve`, POST `/{id}/reject`, GET `/{id}`, GET `?requestId=` | OFF (read: ADM/OFF/WHM) | approve needs `version`; 409 `STALE_VERSION`, `INSUFFICIENT_STOCK`, `INVALID_STATE` |
+| Dispatch | GET/POST `/api/dispatches`, PATCH `/{id}/status` | WHM (own warehouse)/ADM/OFF | DISPATCHED -> IN_TRANSIT -> DELIVERED; 409 `ALREADY_DISPATCHED` |
+| Audit/alerts/map | GET `/api/audit` (ADM/OFF); GET `/api/alerts`, PATCH `/api/alerts/{id}/read` (staff); GET `/api/map` | | |
+| Volunteers | POST/GET `/api/volunteers`, GET `/{id}`, PATCH `/{id}/availability`, POST/GET `/{id}/assignments`, PATCH `/api/assignments/{id}/status` | ADM/OFF/NGO (VOL: own record) | assigning needs AVAILABLE (409 `VOLUNTEER_UNAVAILABLE`) |
+| Partners | POST/GET `/api/partner-contributions`, PATCH `/{id}/status` | NGO offers; ADM/OFF decide | OFFERED -> ACCEPTED/DECLINED; ACCEPTED -> RECEIVED |
+| Report analyzer | POST/GET `/api/ai/analyses`, GET `/{id}`, PATCH `/{id}/review` | staff; review ADM/OFF | 503 `AI_UNAVAILABLE`, 502 `AI_BAD_OUTPUT`, 429 `RATE_LIMITED`; result is advisory only |
+| Analytics | GET `/api/analytics/summary`, `/api/analytics/shortages` | ADM/OFF | optional `disasterId` |
+| Report | GET `/api/reports/situation.pdf` | ADM/OFF | `application/pdf`, optional `disasterId` |
+| Login | POST `/api/auth/login` | public | 429 `TOO_MANY_ATTEMPTS` after repeated failures |

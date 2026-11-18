@@ -28,3 +28,12 @@ Preparation: database and both apps running (`INTEGRATION_GUIDE.md`), `dev` prof
 
 ## Things not to say yet
 No map, no priority scores, no stock or allocation, no dispatch, no AI, no Hindi/Punjabi, no PDF. Do not call the seed figures real data: they are labelled demo.
+
+## Backend demo available now (Days 5-9, API calls; no screens yet)
+Use any REST client with a token from POST /api/auth/login (demo password `Demo@12345`).
+1. Officer verifies a request: the response now carries a priority score with reasons (POST /api/requests/{id}/priority recalculates).
+2. Officer approves it, then POST /api/allocations/recommendations and /{id}/approve: stock is reserved once; the inventory ledger shows RESERVATION.
+3. `warehouse1@demo.drrc.local` POSTs /api/dispatches, then PATCH status IN_TRANSIT and DELIVERED; the request becomes DELIVERED.
+4. GET /api/audit shows who did each step; GET /api/alerts, /api/dashboard, /api/map and /api/analytics/shortages show the effect.
+5. GET /api/reports/situation.pdf downloads the report. Try three wrong passwords and note the throttle after five.
+Say clearly: priority weights and allocation rules are proposals awaiting approval, and the analyzer only suggests.
