@@ -164,3 +164,66 @@ Checkpoint: "a request submitted in the UI is saved and retrieved from PostgreSQ
 ### Next: Day 5
 Inventory and shelter tables (Divay), inventory APIs/UI, shelters, dashboard queries (Neha). Prerequisite: Divay answers D1-D6 and approves V5.
 
+## Day 5 status (16 Nov 2026) - backend and database only, branch `feature/day5-inventory`, NOT merged, NOT approved
+Scope delivered this round: database and backend. Inventory UI, shelter views and the dashboard screen (frontend) are NOT built yet.
+
+| Area | Delivered |
+|---|---|
+| Database (proposed for Divay) | `V6__inventory_shelters.sql`: `inventory` (CHECK reserved <= on_hand), append-only `inventory_transactions` ledger (trigger blocks UPDATE/DELETE), `shelters` (spatial index); `R__dev_seed_day5.sql` (10 stock lines, opening ledger rows, 3 shelters incl. one overcrowded); `queries/day5_checks.sql` |
+| Backend | `GET /api/inventory` (filters warehouse/resource/expiringOnly, paging, sort), `GET /api/inventory/{id}/transactions`, `POST /api/inventory/receipts`, `GET /api/warehouses`, shelters (`GET` list/detail/alternatives, `POST`, `PATCH .../occupancy`), `GET /api/dashboard` |
+
+### Verified in the sandbox (PostgreSQL 16 + PostGIS 3.4)
+V1-V6 and both seed files applied; seed run twice inserts nothing new; `day5_checks.sql` 22 of 22 PASS, `day4_checks.sql` 18 of 18, `day2_checks.sql` 22 of 22. The inventory, dashboard, nearest-shelter and receipt-upsert SQL ran correctly on that database.
+
+### NOT verified (must be run locally)
+`mvnw test` for the new Java code (`InventoryRulesTest`, `InventoryServiceTest`, `ShelterRulesTest`, `DashboardApiIntegrationTest`): Maven Central is blocked in the sandbox.
+
+### Assumptions added by Day 5 (need approval)
+| # | Assumption |
+|---|---|
+| S1 | Stock receipts: ADMIN anywhere; WAREHOUSE_MANAGER only into the warehouse they manage. OFFICER can read stock but not receive. |
+| S2 | Shelter create: ADMIN, OFFICER. Occupancy update: ADMIN, OFFICER, FIELD_WORKER. Occupancy may exceed capacity (that is "overcrowded"). |
+| S3 | available = on_hand - reserved. Reserved stock stays on hand until dispatched (Day 7 deducts it with a DISPATCH ledger row). |
+| S4 | Perishable resources need a future expiry date on receipt; a batch cannot be re-received with a different expiry (409 `BATCH_EXPIRY_MISMATCH`). "Expiring soon" = within 30 days. |
+| S5 | The ledger is append-only; corrections will be ADJUSTMENT rows (Day 6+). |
+| S6 | `GET /api/warehouses` and `GET /api/dashboard` added; dashboard is open to all staff roles. |
+| S7 | Shelter alternatives = 5 nearest other OPEN shelters with free beds. |
+
+### Next: Day 6 (priority score, allocation, approval, concurrency test)
+
+
+## Day 6–7 status (priority, allocation, dispatch, audit, alerts, map)
+
+**Built:** V7 (priority + allocations) and V8 (dispatches, delivery updates, audit_logs, alerts) migrations; priority scoring (explainable, deterministic, officer override with reason); allocation recommend/approve/reject with FEFO reservation, fairness cap, stale-version protection and row-lock concurrency safety; dispatch → in transit → delivered with stock deduction and ledger; audit trail written in the same transaction; alerts (critical request, low stock, overcrowded shelter, approved, dispatched, delivered); `/api/map` data.
+
+**Verified:** migrations V1–V8 apply on PostGIS; DB rules checked (one live allocation per request, reserved ≤ on-hand, audit append-only). Day 5 backend starts and runs on the user's machine.
+
+**Not yet verified:** Day 6–7 Java compile and tests on the user's machine (sandbox cannot reach Maven Central). Integration tests `AllocationDispatchIntegrationTest` need DB_PASSWORD set.
+
+**Proposed assumptions (need approval):** only OFFICER may recommend/approve/reject allocations (ADMIN excluded); competing demand = other VERIFIED/APPROVED requests for the same resource; fairness = proportional cap; low stock = available ≤ 10% of on-hand; priority weights 0.40 severity / 0.30 population / 0.15 waiting time / 0.15 resource criticality, caps 5000 people / 72 h, category thresholds 80/60/40; all staff see all alerts.
+
+**New endpoints:** POST /api/requests/{id}/priority, PATCH /api/requests/{id}/priority-override; POST /api/allocations/recommendations, POST /api/allocations/{id}/approve|reject, GET /api/allocations/{id}, GET /api/allocations?requestId=; GET/POST /api/dispatches, PATCH /api/dispatches/{id}/status; GET /api/audit; GET /api/alerts, PATCH /api/alerts/{id}/read; GET /api/map.
+
+## Rebuild on Divay's schema + Day 8 status (volunteers, partners, report analyzer)
+
+**Done:** Days 5–7 now use Divay's V6–V8 tables (`batch_number`, delta-based `inventory_transactions`, `shelters.capacity_people/current_occupancy`). My migrations are V9 (priority/allocation) and V10 (dispatch/audit/alerts). Day 8 adds V11 and three modules.
+
+**Day 8 endpoints:** POST/GET `/api/volunteers`, GET `/api/volunteers/{id}`, PATCH `/api/volunteers/{id}/availability`, POST/GET `/api/volunteers/{id}/assignments`, PATCH `/api/assignments/{id}/status`; POST/GET `/api/partner-contributions`, PATCH `/api/partner-contributions/{id}/status`; POST/GET `/api/ai/analyses`, GET `/api/ai/analyses/{id}`, PATCH `/api/ai/analyses/{id}/review`.
+
+**Analyzer safety rules (all in code and tested):** personal identifiers (phone, e-mail, Aadhaar-style and PAN numbers) are scrubbed before the text is stored or sent; the report is passed as data between markers; the answer must match a strict schema or it is rejected (HTTP 502); a missing key or an outage gives HTTP 503 and a stored FAILED record; 10 analyses per user per hour (HTTP 429); a result stays UNREVIEWED until an officer accepts or rejects it, and it never creates or changes a request. Names and addresses written in prose cannot be removed automatically, so staff must not paste them.
+
+**Verified:** V1–V11 apply on a clean PostGIS database built from `main`; seven database checks pass (`database/queries/day7_checks.sql`); the pure Day 8 logic (JSON reader/writer, scrubber, schema parser) compiles and passes its checks under plain Java. **Not yet verified:** the full Maven test run on the rebuilt branch (the maintainer runs it locally).
+
+**Assumptions needing approval:** V1 (ADMIN/OFFICER/NGO register and list volunteers; only ADMIN/OFFICER assign; a VOLUNTEER sees and updates only their own record), P1 (an NGO offers for its own organization; ADMIN/OFFICER decide; RECEIVED does not add stock, the warehouse manager still records it), AI1 (any staff role may analyze; only ADMIN/OFFICER review; limit 10 per hour; model `claude-sonnet-5-5` via the `ANTHROPIC_API_KEY` environment variable).
+
+## Day 9–10 status (analytics, shortages, PDF report, login throttle, end-to-end test, release notes)
+
+**Built:** `GET /api/analytics/summary` and `/api/analytics/shortages` (ADMIN/OFFICER; optional `disasterId`; real counts from the tables, nothing estimated); `GET /api/reports/situation.pdf` (A4 PDF with PDFBox 3.0.3, ADMIN/OFFICER, writes a `REPORT_GENERATED` audit row); login throttle (5 failed sign-ins per e-mail or 30 per address in 15 minutes gives HTTP 429 `TOO_MANY_ATTEMPTS`; in memory, one server instance); `docs/SECURITY_REVIEW.md`; `docs/RELEASE_NOTES.md`; `docs/API_CONTRACT.md` section 8 (all Day 5-10 endpoints).
+
+**Tests added:** `AnalyticsRulesTest`, `LoginThrottleTest`, `PdfSituationReportTest`, and `e2e/Day8To10ApiIntegrationTest` (volunteers, partner offers, analytics, PDF, throttle, analyzer with no key). Together with `AllocationDispatchIntegrationTest` (request -> priority -> allocation -> dispatch -> delivered, plus the two-officer race) this is the end-to-end proof. Integration tests need `DB_PASSWORD` set and a running database.
+
+**Verified here:** V1-V11 apply on a clean PostGIS database from `main`; the analytics SQL returns correct rows on the demo data. **Not verified here:** Maven compile and test of Days 8-10 (sandbox cannot reach Maven Central); the maintainer must run `.\mvnw.cmd test`.
+
+**Assumptions needing approval:** N1 (analytics and PDF only for ADMIN/OFFICER); shortage = demand of VERIFIED/APPROVED requests minus free stock in ACTIVE warehouses (unexpired); partner offers are shown beside shortages but are not counted as stock.
+
+**Still open (people, not code):** approve the proposed rules (priority weights, fairness cap, officer-only allocation approval, A1, V1, P1, AI1, N1); Divay's D1-D6 and deployment; frontend screens for Days 5-10 (not built); security items listed as open in `docs/SECURITY_REVIEW.md`.

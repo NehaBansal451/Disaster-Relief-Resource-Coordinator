@@ -100,6 +100,7 @@ public class RequestService {
             throw notAllowed(id, owner.status(), "cancelled");
         }
         move(id, owner.status(), RequestStatus.CANCELLED, "CANCELLED", userId, reason, null);
+        repository.markAllocationsStale(id);
         return get(id);
     }
 
