@@ -168,3 +168,8 @@ Version numbers may be adjusted if the team changes implementation order; applie
 6. Every stock movement has an actor user.
 7. Ledger rows are append-only.
 8. Backend transaction + `SELECT ... FOR UPDATE` is responsible for atomic balance and ledger updates.
+
+## V9–V11 (backend, built on the V6–V8 inventory and shelter tables)
+- **V9 priority + allocation:** `need_requests` gets `priority_reasons`, `priority_calculated_at`, `priority_overridden`, `priority_override_reason` (score and category set together; an override needs a reason). `allocations` (one live allocation per request via a partial unique index; allocated ≤ requested; `version` for stale protection), `allocation_items`, `allocation_not_selected`, `allocation_reservations` (which inventory lines were reserved, so dispatch deducts exactly those).
+- **V10 dispatch, audit, alerts:** `dispatches` (unique per allocation + warehouse), `delivery_updates`, `audit_logs` (append-only trigger), `alerts` (NEW/READ).
+- **V11 volunteers, partners, analyzer:** `volunteers`, `volunteer_assignments`, `partner_contributions`, `ai_analyses` (report text is stored already scrubbed of personal identifiers; a model result is only a suggestion with a review status).
