@@ -2,6 +2,7 @@ package com.disasterrelief.backend.request;
 
 import com.disasterrelief.backend.common.PageResponse;
 import com.disasterrelief.backend.common.Severity;
+import com.disasterrelief.backend.priority.PriorityService;
 import com.disasterrelief.backend.security.CurrentUser;
 import com.disasterrelief.backend.security.StaffOnly;
 import jakarta.validation.Valid;
@@ -28,9 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class RequestController {
 
     private final RequestService service;
+    private final PriorityService priority;
 
-    public RequestController(RequestService service) {
+    public RequestController(RequestService service, PriorityService priority) {
         this.service = service;
+        this.priority = priority;
     }
 
     @GetMapping
@@ -63,7 +66,13 @@ public class RequestController {
     @PreAuthorize("hasRole('OFFICER')")
     public RequestResponse verify(@PathVariable long id, @Valid @RequestBody VerifyRequest body,
                                   @AuthenticationPrincipal Jwt jwt) {
-        return service.verify(id, body, CurrentUser.id(jwt));
+        long officerId = CurrentUser.id(jwt);
+        RequestResponse result = service.verify(id, body, officerId);
+        if (body.decision() == VerifyDecision.VERIFY) {
+            priority.calculate(id, officerId);
+            return service.get(id);
+        }
+        return result;
     }
 
     @PatchMapping("/{id}/approve")
