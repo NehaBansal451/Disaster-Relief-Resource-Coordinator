@@ -227,3 +227,6 @@ V1-V6 and both seed files applied; seed run twice inserts nothing new; `day5_che
 **Assumptions needing approval:** N1 (analytics and PDF only for ADMIN/OFFICER); shortage = demand of VERIFIED/APPROVED requests minus free stock in ACTIVE warehouses (unexpired); partner offers are shown beside shortages but are not counted as stock.
 
 **Still open (people, not code):** approve the proposed rules (priority weights, fairness cap, officer-only allocation approval, A1, V1, P1, AI1, N1); Divay's D1-D6 and deployment; frontend screens for Days 5-10 (not built); security items listed as open in `docs/SECURITY_REVIEW.md`.
+
+## Frontend Days 5-10 (screens)
+Added Vaadin screens for: dashboard, live map, inventory (receive stock, history), shelters (occupancy, alternatives), allocation (recommend, edit, approve, reject), dispatch (timeline, status), volunteers (register, availability, tasks), partners, alerts, report analyzer, analytics (+ PDF), audit log. Each screen hides itself from roles the backend would refuse. Not compiled in the sandbox (no Maven Central): verify with `.\mvnw.cmd clean test` and by clicking through `docs/DEMO_SCRIPT.md`. The VOLUNTEER role has no web screen yet (the backend lists volunteers for staff only).
