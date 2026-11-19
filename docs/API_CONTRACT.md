@@ -126,7 +126,7 @@ Audit event catalogue (each row: actor, role, entity, id, timestamp, before/afte
 ## 7. Open contract decisions
 O1 ADMIN may approve requests? (default no) | O2 self-approval ban (proposed) | O3 cancellation after ALLOCATED, dispatch cancellation, stock release | O4 public citizen reporting | O5 priority recalculation as waiting time grows | O6 residual quantity after partial allocation (request is ALLOCATED while `unfilledQty` > 0; how the remainder is served) | O7 may the same officer verify and approve one request (currently yes).
 
-## 8. Endpoints added on Days 5-10 (backend built; frontend not built)
+## 8. Endpoints added on Days 5-10 (backend and frontend built)
 All errors are `application/problem+json` with a stable `code`. Lists use `{content[], page, size, totalElements, totalPages}`. Roles: ADM admin, OFF officer, WHM warehouse manager, FLD field worker, NGO, VOL volunteer. "staff" = ADM, OFF, WHM, FLD, NGO.
 
 | Area | Endpoint | Roles | Notes |
