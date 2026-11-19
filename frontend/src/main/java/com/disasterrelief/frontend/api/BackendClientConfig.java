@@ -15,7 +15,7 @@ public class BackendClientConfig {
     RestClient backendRestClient(@Value("${drrc.backend.url}") String baseUrl) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(3));
-        factory.setReadTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(40));
         return RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
     }
 }
