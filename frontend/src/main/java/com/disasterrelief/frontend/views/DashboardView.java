@@ -136,7 +136,7 @@ public class DashboardView extends AppView {
         }
         for (Map<String, Object> a : items.subList(0, Math.min(6, items.size()))) {
             Span text = new Span("Request #" + J.lng(a, "requestId") + ": " + Formats.label(J.str(a, "action"))
-                    + (J.str(a, "toStatus").isEmpty() ? "" : " (" + Formats.label(J.str(a, "toStatus")) + ")"));
+                    + (J.str(a, "toStatus").isEmpty() || Formats.label(J.str(a, "toStatus")).equals(Formats.label(J.str(a, "action"))) ? "" : " (" + Formats.label(J.str(a, "toStatus")) + ")"));
             Span small = new Span(J.str(a, "actorName") + " - " + Formats.dateTime(J.str(a, "at")));
             small.getElement().getStyle().set("display", "block").set("color", "var(--drrc-muted)").set("font-size", "0.78rem");
             Div item = new Div(text, small);
