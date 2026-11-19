@@ -26,7 +26,7 @@ import com.vaadin.flow.router.Route;
 import java.util.List;
 
 /** Home page: paged list of disasters, filterable by status and severity. Click a row to open it. */
-@Route(value = "", layout = MainLayout.class)
+@Route(value = "disasters", layout = MainLayout.class)
 @PageTitle("DRRC - Disasters")
 public class DisasterListView extends VerticalLayout implements BeforeEnterObserver {
 
