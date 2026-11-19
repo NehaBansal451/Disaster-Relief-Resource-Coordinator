@@ -83,7 +83,7 @@ WHERE n.description = 'DEMO: Verified water requirement for the Khera flood resp
 INSERT INTO alerts (type, severity, message, entity_type, entity_id, status, created_at)
 SELECT 'DELIVERED', 'LOW',
        'DEMO: Food-ration shipment delivery has been confirmed.',
-       'DISPATCH', d.id, 'READ', TIMESTAMPTZ '2026-11-18 12:35:00+05:30'
+       'DISPATCH', d.id, 'NEW', TIMESTAMPTZ '2026-11-18 12:35:00+05:30'
 FROM dispatches d
 JOIN need_requests n ON n.id = d.request_id
 CROSS JOIN users officer
@@ -97,11 +97,11 @@ WHERE lower(officer.email) = 'officer@demo.drrc.local'
 
 -- Mark the seeded delivered alerts as read by the officer.
 UPDATE alerts a
-SET read_by = officer.id,
+SET status = 'READ', read_by = officer.id,
     read_at = COALESCE(a.read_at, TIMESTAMPTZ '2026-11-18 12:40:00+05:30')
 FROM users officer
 WHERE lower(officer.email) = 'officer@demo.drrc.local'
   AND a.type = 'DELIVERED'
   AND a.message = 'DEMO: Food-ration shipment delivery has been confirmed.'
-  AND a.status = 'READ'
+  AND a.status IN ('NEW', 'READ')
   AND a.read_by IS NULL;
