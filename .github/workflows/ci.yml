@@ -83,7 +83,7 @@ jobs:
           cache: maven
 
       # Vaadin needs Node.js only as build tooling (see docs/SYSTEM_ARCHITECTURE.md).
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
 
