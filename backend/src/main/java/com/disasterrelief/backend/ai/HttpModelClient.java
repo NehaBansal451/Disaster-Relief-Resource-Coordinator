@@ -10,28 +10,38 @@ import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-/** Calls the Anthropic Messages API. The key comes from ANTHROPIC_API_KEY and is never logged or returned. */
+/** Calls the configured model API over HTTP. The key comes from AI_API_KEY and is never logged or returned. */
 @Component
-class AnthropicModelClient implements ModelClient {
+class HttpModelClient implements ModelClient {
 
     private final RestClient client;
     private final String apiKey;
     private final String model;
+    private final String versionHeader;
+    private final String version;
 
-    AnthropicModelClient(@Value("${drrc.ai.api-key:}") String apiKey,
-                         @Value("${drrc.ai.model:claude-sonnet-5-5}") String model,
-                         @Value("${drrc.ai.base-url:https://api.anthropic.com}") String baseUrl) {
+    HttpModelClient(@Value("${drrc.ai.api-key:}") String apiKey,
+                         @Value("${drrc.ai.model:}") String model,
+                         @Value("${drrc.ai.base-url:}") String baseUrl,
+                         @Value("${drrc.ai.version-header:}") String versionHeader,
+                         @Value("${drrc.ai.version:}") String version) {
         this.apiKey = apiKey == null ? "" : apiKey.trim();
-        this.model = model;
+        this.model = model == null ? "" : model.trim();
+        this.versionHeader = versionHeader == null ? "" : versionHeader.trim();
+        this.version = version == null ? "" : version.trim();
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build());
         factory.setReadTimeout(Duration.ofSeconds(30));
-        this.client = RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
+        RestClient.Builder builder = RestClient.builder().requestFactory(factory);
+        if (baseUrl != null && !baseUrl.isBlank()) {
+            builder.baseUrl(baseUrl.trim());
+        }
+        this.client = builder.build();
     }
 
     @Override
     public boolean configured() {
-        return !apiKey.isEmpty();
+        return !apiKey.isEmpty() && !model.isEmpty();
     }
 
     @Override
@@ -47,9 +57,11 @@ class AnthropicModelClient implements ModelClient {
                     "max_tokens", 800,
                     "system", system,
                     "messages", List.of(Map.of("role", "user", "content", userContent)));
-            Map<String, Object> response = client.post().uri("/v1/messages")
-                    .header("x-api-key", apiKey)
-                    .header("anthropic-version", "2023-06-01")
+            RestClient.RequestBodySpec request = client.post().uri("/v1/messages").header("x-api-key", apiKey);
+            if (!versionHeader.isEmpty() && !version.isEmpty()) {
+                request = request.header(versionHeader, version);
+            }
+            Map<String, Object> response = request
                     .body(body)
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() { });

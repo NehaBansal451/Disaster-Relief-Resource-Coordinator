@@ -26,7 +26,7 @@ Not built or tested on Day 1.
 | A9 | Stock integrity: see section 4. | **[Divay D4]** |
 | A10 | Allocations persisted (`RECOMMENDED -> APPROVED/REJECTED/STALE`, `version`); approval re-checks stock. Workflow in `API_CONTRACT.md` section 4. | Proposed |
 | A11 | No backend WebSocket in MVP; Vaadin `@Push` + timed refresh. | Proposed |
-| A12 | Claude only in backend `integration.ai`; output stored in `ai_analyses`; cannot write operational records. | Approved in principle; table **[Divay D2/D3]** |
+| A12 | The AI provider is called only from backend `integration.ai`; output stored in `ai_analyses`; cannot write operational records. | Approved in principle; table **[Divay D2/D3]** |
 | A13 | RFC 9457 problem JSON with stable `code`; pagination `page,size,sort`. | Proposed |
 | A14 | Secrets only via environment variables; `.env` git-ignored. | Approved in principle |
 | A15 | JUnit 5, Mockito, Testcontainers (postgis image); `contextLoads` must move to Testcontainers once a datasource exists. | Proposed |

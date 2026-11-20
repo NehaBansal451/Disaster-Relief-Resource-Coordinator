@@ -49,7 +49,7 @@ Dependency order: (1) approvals above -> (2) V2 / Flyway wiring [Divay] -> (3) b
 | Stock race conditions | D4 + Day 6 concurrency test |
 | Hosting limits unknown | Divay verifies before Day 8 |
 | Map component licence unverified | Evaluate before Day 7 |
-| Claude API cost/privacy | Document transmitted fields, rate limit, fallback |
+| AI API cost/privacy | Document transmitted fields, rate limit, fallback |
 
 ## Day 2 status (5 Nov 2026) - implemented on branches, NOT merged, NOT approved
 Work was prepared in three separate branches so ownership stays clean. Nothing below is an approval: the register above is unchanged, and Divay's formal review of D1-D6 is not recorded.
@@ -214,7 +214,7 @@ V1-V6 and both seed files applied; seed run twice inserts nothing new; `day5_che
 
 **Verified:** V1–V11 apply on a clean PostGIS database built from `main`; seven database checks pass (`database/queries/day7_checks.sql`); the pure Day 8 logic (JSON reader/writer, scrubber, schema parser) compiles and passes its checks under plain Java. **Not yet verified:** the full Maven test run on the rebuilt branch (the maintainer runs it locally).
 
-**Assumptions needing approval:** V1 (ADMIN/OFFICER/NGO register and list volunteers; only ADMIN/OFFICER assign; a VOLUNTEER sees and updates only their own record), P1 (an NGO offers for its own organization; ADMIN/OFFICER decide; RECEIVED does not add stock, the warehouse manager still records it), AI1 (any staff role may analyze; only ADMIN/OFFICER review; limit 10 per hour; model `claude-sonnet-5-5` via the `ANTHROPIC_API_KEY` environment variable).
+**Assumptions needing approval:** V1 (ADMIN/OFFICER/NGO register and list volunteers; only ADMIN/OFFICER assign; a VOLUNTEER sees and updates only their own record), P1 (an NGO offers for its own organization; ADMIN/OFFICER decide; RECEIVED does not add stock, the warehouse manager still records it), AI1 (any staff role may analyze; only ADMIN/OFFICER review; limit 10 per hour; model set via `AI_MODEL` and key via the `AI_API_KEY` environment variable).
 
 ## Day 9–10 status (analytics, shortages, PDF report, login throttle, end-to-end test, release notes)
 

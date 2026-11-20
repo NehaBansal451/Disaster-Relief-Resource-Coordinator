@@ -19,4 +19,4 @@ V1-V8 are Divay's (users to shelters). V9 priority/allocation, V10 dispatch/audi
 1. `cd deployment\docker; docker compose up -d`
 2. Load `.env` into the PowerShell window, then `cd ..\..\backend`.
 3. `.\mvnw.cmd test`, then `.\mvnw.cmd spring-boot:run` (API on http://localhost:8080).
-4. Optional analyzer: set `ANTHROPIC_API_KEY` before starting; without it the analyzer answers 503.
+4. Optional analyzer: set `AI_API_KEY`, `AI_MODEL` and `AI_BASE_URL` before starting; without it the analyzer answers 503.

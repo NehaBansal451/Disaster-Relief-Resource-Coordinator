@@ -12,7 +12,7 @@ Scope: the Spring Boot backend as of Day 9. This is a code review plus automated
 | Brute force | 5 failed sign-ins per e-mail or 30 per address in 15 minutes give 429 | `LoginThrottleTest`, `loginIsThrottledAfterRepeatedFailures` |
 | Concurrency | Two officers cannot reserve the same stock (row locks, guarded updates, database CHECK) | `twoOfficersCannotOverAllocateTheSameStock` |
 | Audit | `audit_logs` is append-only (database trigger); who/what/when is written in the same transaction as the change | `day7_checks.sql` |
-| Personal data and AI | Phone, e-mail, Aadhaar-style and PAN numbers are removed before storage and before the text goes to the model; the key is read from `ANTHROPIC_API_KEY`; output must match a strict schema; a result never changes a request without a person | `PiiScrubberTest`, `AnalysisParserTest`, `AnalysisServiceTest` |
+| Personal data and AI | Phone, e-mail, Aadhaar-style and PAN numbers are removed before storage and before the text goes to the model; the key is read from `AI_API_KEY`; output must match a strict schema; a result never changes a request without a person | `PiiScrubberTest`, `AnalysisParserTest`, `AnalysisServiceTest` |
 | Error leakage | Unexpected errors return a generic 500 problem document; the stack trace stays in the server log | `GlobalExceptionHandler` |
 | Secrets | No password, key or secret in the repository; `.env` is git-ignored | manual review |
 
