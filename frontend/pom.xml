@@ -17,7 +17,7 @@
 		<java.version>21</java.version>
 		<!-- UNVERIFIED: Maven Central was not reachable when this was written. Vaadin 25 requires Spring Boot 4.1+.
 		     If resolution fails, set this to the newest released 25.x version. -->
-		<vaadin.version>25.3.4</vaadin.version>
+		<vaadin.version>25.3.5</vaadin.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
