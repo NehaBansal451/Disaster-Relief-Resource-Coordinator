@@ -1,0 +1,102 @@
+name: CI
+
+# Builds and tests the backend and frontend on every push and pull request to main.
+# The backend job starts a PostGIS database, so the integration tests (login, requests,
+# allocation to delivery, volunteers, analytics, PDF) run for real instead of being skipped.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: disaster_relief
+          POSTGRES_USER: drrc_user
+          POSTGRES_PASSWORD: ci_only_database_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U drrc_user -d disaster_relief"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: disaster_relief
+      DB_USER: drrc_user
+      DB_PASSWORD: ci_only_database_password
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Create a throwaway JWT secret for this run
+        run: echo "JWT_SECRET=$(openssl rand -base64 48)" >> "$GITHUB_ENV"
+
+      - name: Run backend tests
+        working-directory: backend
+        run: |
+          chmod +x mvnw
+          ./mvnw -B test
+
+      - name: Upload backend test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Vaadin needs Node.js only as build tooling (see docs/SYSTEM_ARCHITECTURE.md).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: |
+          chmod +x mvnw
+          ./mvnw -B test
+
+      - name: Upload frontend test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-reports
+          path: frontend/target/surefire-reports/
+          if-no-files-found: ignore
