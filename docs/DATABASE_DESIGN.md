@@ -148,7 +148,7 @@ The DB CHECK constraint is the final defence against a balance where reserved qu
 | V9 | `allocations`, `allocation_items` | Request-to-warehouse recommendation and approval |
 | V10 | `dispatches`, `delivery_updates` | Shipment and delivery tracking |
 | V11 | `audit_logs`, `alerts` | Operational audit and alerts |
-| Later | `volunteers`, `volunteer_assignments`, `weather_records`, `ai_analyses`, `awareness_resources` | Supporting features |
+| Later | `volunteers`, `volunteer_assignments`, `ai_analyses` | Supporting features |
 
 Version numbers may be adjusted if the team changes implementation order; applied migration versions must never be reused or edited.
 

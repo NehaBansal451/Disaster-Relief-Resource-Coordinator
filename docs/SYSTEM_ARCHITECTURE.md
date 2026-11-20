@@ -51,7 +51,7 @@ Existing: `organizations`, `users`. Relationships (BIGSERIAL ids, TIMESTAMPTZ au
 - `disasters` 1-N `affected_areas`; `affected_areas` 1-N `need_requests`; `resources` 1-N `need_requests`; `users` 1-N `need_requests`; `need_requests` 1-N `request_history` (includes approval and clarification events)
 - `warehouses` 1-N `inventory` N-1 `resources`; `inventory` 1-N `inventory_transactions`
 - `need_requests` 1-N `allocations` 1-N `allocation_items`; `allocations` 1-N `dispatches` 1-N `delivery_updates`
-- `shelters`, `volunteers`/`volunteer_assignments`, `alerts`, `audit_logs`, `weather_records`, `awareness_resources`
+- `shelters`, `volunteers`/`volunteer_assignments`, `alerts`, `audit_logs`
 - Proposed additions: `ai_analyses`, priority override data, priority weight configuration.
 Indexes: need_requests(status, area, priority), inventory(warehouse, resource), transactions(created_at), GiST on geography columns. Final columns go in Divay's `docs/DATABASE_DESIGN.md` (not created yet).
 

@@ -45,7 +45,7 @@ Dependency order: (1) approvals above -> (2) V2 / Flyway wiring [Divay] -> (3) b
 |---|---|
 | Vaadin 25 build requires Node.js; conflicts with literal reading of "no Node" | Build-tooling-only policy awaiting approval |
 | Boot 4 / Jackson 3 / Vaadin 25 are new | Pin versions; smoke test on Day 2 |
-| Ambitious 10-day plan | Core chain first; defer features 15, 17, 20, 21 if needed |
+| Ambitious 10-day plan | Core chain first; the 15 features in the blueprint catalogue are the full scope |
 | Stock race conditions | D4 + Day 6 concurrency test |
 | Hosting limits unknown | Divay verifies before Day 8 |
 | Map component licence unverified | Evaluate before Day 7 |

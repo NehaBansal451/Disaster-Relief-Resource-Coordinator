@@ -27,7 +27,7 @@ Preparation: database and both apps running (`INTEGRATION_GUIDE.md`), `dev` prof
 6. Log in as `citizen@demo.drrc.local`: staff screens are refused (403) - role enforcement on the server.
 
 ## Things not to say yet
-No map, no priority scores, no stock or allocation, no dispatch, no AI, no Hindi/Punjabi, no PDF. Do not call the seed figures real data: they are labelled demo.
+No map, no priority scores, no stock or allocation, no dispatch, no AI, no PDF. Do not call the seed figures real data: they are labelled demo.
 
 ## Backend demo available now (Days 5-9, API calls; no screens yet)
 Use any REST client with a token from POST /api/auth/login (demo password `Demo@12345`).

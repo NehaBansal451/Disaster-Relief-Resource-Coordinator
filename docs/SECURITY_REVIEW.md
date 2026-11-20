@@ -23,5 +23,5 @@ Scope: the Spring Boot backend as of Day 9. This is a code review plus automated
 4. HTTPS, CORS origins, database backups and secret storage belong to deployment (Divay). Nothing in the backend forces HTTPS.
 5. Names and addresses typed into free text cannot be removed by the scrubber; staff must not paste them into the analyzer (training/UI warning).
 6. No dependency vulnerability scan (for example OWASP dependency-check) and no penetration test were run (team).
-7. The Helvetica PDF font prints only Latin characters; Hindi/Punjabi text appears as `?` (backend, needs an embedded font).
+7. The Helvetica PDF font prints only Latin characters; any non-Latin text appears as `?` (backend, needs an embedded font).
 8. The proposed rules in `PROJECT_STATUS.md` (priority weights, fairness cap, who may approve) are assumptions until Divay/mentor approve them.

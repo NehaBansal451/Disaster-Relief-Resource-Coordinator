@@ -25,8 +25,11 @@ Administrator, Relief officer, Warehouse manager, Field worker / volunteer, NGO 
 ## Request lifecycle
 Pending -> Verified -> Approved -> Allocated -> Dispatched -> In Transit -> Delivered. Rejected and Cancelled must record a reason. Exact transitions: `API_CONTRACT.md` section 1.
 
-## Feature catalogue (21)
-1 Operations dashboard | 2 GIS map | 3 Inventory | 4 Need reporting | 5 Shelters | 6 Explainable priority score | 7 Allocation engine | 8 Shortage/surplus detection | 9 Delivery tracking | 10 AI report analyzer | 11 Multilingual (EN/HI/PA) | 12 Volunteers | 13 NGO/partners | 14 PDF reports | 15 Limited offline (do not claim until tested) | 16 Weather | 17 Image damage assessment | 18 Audit | 19 Alerts | 20 Awareness centre | 21 AI assistant. Build the core chain first; 15, 17, 20, 21 are the first to defer.
+## Feature catalogue (15)
+1 Operations dashboard | 2 GIS map | 3 Inventory | 4 Need reporting | 5 Shelters | 6 Explainable priority score | 7 Allocation engine | 8 Shortage/surplus detection | 9 Delivery tracking | 10 AI report analyzer | 11 Volunteers | 12 NGO/partners | 13 PDF reports | 14 Audit | 15 Alerts. Build the core chain first.
+
+### Removed from scope (20 Nov 2026)
+The team removed these six features from the project: multilingual support (English/Hindi/Punjabi), limited offline mode, weather, image damage assessment, awareness centre, and the AI assistant. They were never built. The user interface is English only. The `preferred_language` column in `users` (migration V2) is unused and left in place because applied migrations are not edited.
 
 ## Priority formula (proposed, not yet approved)
 `Priority = 0.40 Severity + 0.30 Population impact + 0.15 Waiting time + 0.15 Time sensitivity`, each input normalized 0-100; thresholds 80/60/40 proposed. Integrity rule: at approval, re-check stock inside a transaction with locking; never double-reserve or go negative.
