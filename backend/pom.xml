@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>3.0.3</version>
+			<version>3.0.8</version>
 		</dependency>
 		<!-- Day 2: persistence + migrations (PROPOSED D1: Flyway runs inside the backend at startup) -->
 		<dependency>
