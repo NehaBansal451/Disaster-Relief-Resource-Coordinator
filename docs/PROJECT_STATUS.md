@@ -1,6 +1,14 @@
 # Project Status
 
-Last updated: 13 Nov 2026 (Day 3 merged to `main`; Day 4 on `feature/day4-requests`; see "Day 3 status" and "Day 4 status" at the end). Day 1-2 approvals below are still PENDING: only Neha and Divay can record them.
+Last updated: 20 Nov 2026. The sections from "Day 1 review outcome" down are a dated log, kept as history; the block below is the current picture.
+
+## Current status (20 Nov 2026)
+- **Scope:** 15 features, all built (dashboard, map, inventory, need reporting, shelters, priority score, allocation, shortage detection, delivery tracking, report analyzer, volunteers, partners, PDF report, audit, alerts). Six features were removed from scope on 20 Nov 2026 (see `PROJECT_BLUEPRINT.md`).
+- **Code on `main`:** backend and frontend for all 15 features, 11 database migrations plus demo seed data.
+- **Automated checks:** GitHub Actions (`.github/workflows/ci.yml`) builds and tests backend (with a PostGIS database) and frontend on every push; `codeql.yml` scans the Java code weekly; `dependabot.yml` watches dependencies. Look at the repository's Actions tab for the latest result; do not rely on this file for it.
+- **Production safety:** profile `prod` never loads demo data and refuses to start if demo users exist (`DemoDataGuard`).
+- **Still open:** a rehearsed end-to-end demo (`DEMO_SCRIPT.md`, rehearsal log), approvals (`APPROVALS.md`), deployment and hosting (Divay, decision D6), and the accepted limits in `SECURITY_REVIEW.md`.
+- **Approvals:** none recorded. Use `APPROVALS.md` to decide, then update the register below.
 
 ## Day 1 review outcome
 - Direction approved in principle. Docs v0.2 corrected as requested; approvals below still pending.

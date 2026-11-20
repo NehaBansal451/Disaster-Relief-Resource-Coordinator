@@ -20,3 +20,7 @@ V1-V8 are Divay's (users to shelters). V9 priority/allocation, V10 dispatch/audi
 2. Load `.env` into the PowerShell window, then `cd ..\..\backend`.
 3. `.\mvnw.cmd test`, then `.\mvnw.cmd spring-boot:run` (API on http://localhost:8080).
 4. Optional analyzer: set `AI_API_KEY`, `AI_MODEL` and `AI_BASE_URL` before starting; without it the analyzer answers 503.
+5. For a real deployment use `SPRING_PROFILES_ACTIVE=prod` (migrations only, no demo data; the server refuses to start with demo users present).
+
+## Automated checks
+GitHub Actions runs the backend tests (with a PostGIS database) and the frontend tests on every push, plus a weekly code scan. The Maven-test note under "Known limits" above is therefore replaced by the CI result on the Actions tab.

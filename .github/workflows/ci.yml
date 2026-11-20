@@ -85,7 +85,7 @@ jobs:
       # Vaadin needs Node.js only as build tooling (see docs/SYSTEM_ARCHITECTURE.md).
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Run frontend tests
         working-directory: frontend

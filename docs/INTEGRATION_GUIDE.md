@@ -46,7 +46,7 @@ Do this in **both** the backend window and the frontend window.
 cd backend
 .\mvnw.cmd spring-boot:run
 ```
-Success looks like: Flyway "Successfully applied 5 migrations" (V1-V5), then "Tomcat started on port 8080". Health: <http://localhost:8080/actuator/health> shows `UP`.
+Success looks like: Flyway "Successfully applied 11 migrations" (V1-V11), then "Tomcat started on port 8080". Health: <http://localhost:8080/actuator/health> shows `UP`.
 
 ## 6. Frontend (window 2)
 ```powershell
@@ -65,6 +65,18 @@ Open <http://localhost:8081>. The first start downloads the Vaadin front-end bui
 | `ngo@demo.drrc.local` | NGO coordinator | Submit requests |
 | `citizen@demo.drrc.local`, `volunteer@demo.drrc.local` | Citizen, volunteer | Cannot use the staff screens |
 These accounts exist only with the `dev` profile. Never run `dev` on a public server.
+
+## 7a. Optional: report analyzer settings
+The analyzer is off until these are set in the same environment as the backend (add them to `.env` and reload it, step 4). Without them everything else works and the analyzer answers 503.
+| Variable | Meaning |
+|---|---|
+| `AI_API_KEY` | Your key for the model provider. Never commit it or paste it into a chat |
+| `AI_MODEL` | The model name to use |
+| `AI_BASE_URL` | The provider's API address, for example `https://...` (no trailing slash) |
+| `AI_VERSION_HEADER`, `AI_VERSION` | Only if your provider requires a version header on every request: its name and value. Leave both unset otherwise |
+
+## 7b. Running for real (not a demo)
+Use `SPRING_PROFILES_ACTIVE=prod`. It loads only the database migrations, never the demo data, and the backend refuses to start if the `dev` profile is also on or if demo users already exist in the database. Use a database that never ran with `dev`.
 
 ## 8. Tests
 ```powershell

@@ -16,12 +16,15 @@ Scope: the Spring Boot backend as of Day 9. This is a code review plus automated
 | Error leakage | Unexpected errors return a generic 500 problem document; the stack trace stays in the server log | `GlobalExceptionHandler` |
 | Secrets | No password, key or secret in the repository; `.env` is git-ignored | manual review |
 
+## Done since the first review
+- Demo data cannot reach production: profile `prod` loads migrations only, and `DemoDataGuard` stops the server if the `dev` profile is also active or if demo users exist (`DemoDataGuardTest`).
+- Dependency and code scanning: `.github/dependabot.yml` (weekly updates for backend, frontend and workflows) and `.github/workflows/codeql.yml` (static analysis of the Java code). One manual step remains: switch on "Dependabot alerts" and "Dependabot security updates" in the repository's Settings, Code security page. Review the first scan results; no penetration test has been run.
+
 ## Open items (not done, owner in brackets)
-1. Login throttle and the analyzer rate limit are in memory: they reset on restart and do not work across several servers. Use a shared store if more than one instance runs (backend/Divay).
-2. No token revocation or refresh: a stolen token works until it expires (1 hour). Acceptable for the prototype; revisit before public use (backend).
-3. Demo users share a published password. The `dev` profile seeds them; production must not load `R__dev_seed*.sql` (Divay).
+1. Login throttle and the analyzer rate limit are in memory: they reset on restart and do not work across several servers. **Accepted for the prototype** (one server). Before running more than one instance, store them in the database (backend/Divay).
+2. No token revocation or refresh: a stolen token works until it expires (1 hour), and a disabled account keeps working until then. **Accepted for the prototype.** Before public use, add a per-user token version checked on each request, a logout that bumps it, and refresh tokens (backend). This changes sign-in code, so it needs a decision on token lifetime first.
+3. Demo users share a published password. The `dev` profile seeds them; `prod` now refuses them (done above).
 4. HTTPS, CORS origins, database backups and secret storage belong to deployment (Divay). Nothing in the backend forces HTTPS.
 5. Names and addresses typed into free text cannot be removed by the scrubber; staff must not paste them into the analyzer (training/UI warning).
-6. No dependency vulnerability scan (for example OWASP dependency-check) and no penetration test were run (team).
-7. The Helvetica PDF font prints only Latin characters; any non-Latin text appears as `?` (backend, needs an embedded font).
-8. The proposed rules in `PROJECT_STATUS.md` (priority weights, fairness cap, who may approve) are assumptions until Divay/mentor approve them.
+6. The Helvetica PDF font prints only Latin characters; any non-Latin text appears as `?`. The user interface is English only, so this matters only if someone types non-Latin text into a field (backend).
+7. The proposed rules in `PROJECT_STATUS.md` (priority weights, fairness cap, who may approve) are assumptions until Neha and Divay approve them (`APPROVALS.md`).

@@ -1,0 +1,19 @@
+# Weekly checks for outdated or vulnerable dependencies. Dependabot opens a pull request for each update.
+# Also turn on "Dependabot alerts" and "Dependabot security updates" in the repository settings
+# (Settings -> Code security) so known vulnerabilities are reported as soon as they are published.
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "maven"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
