@@ -1,0 +1,26 @@
+# Build from the repository root:
+# docker build -f deployment/docker/dockerfile.frontend .
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+WORKDIR /workspace
+
+COPY frontend/pom.xml frontend/pom.xml
+COPY frontend/.mvn frontend/.mvn
+COPY frontend/mvnw frontend/mvnw
+RUN chmod +x frontend/mvnw && cd frontend && ./mvnw -B -DskipTests dependency:go-offline
+
+COPY frontend/src frontend/src
+RUN cd frontend && ./mvnw -B -Pproduction -DskipTests package
+
+FROM eclipse-temurin:21-jre-jammy AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system app \
+    && useradd --system --gid app --home-dir /app app
+WORKDIR /app
+COPY --from=build --chown=app:app /workspace/frontend/target/frontend-0.0.1-SNAPSHOT.jar app.jar
+USER app
+EXPOSE 8081
+HEALTHCHECK --interval=20s --timeout=5s --start-period=90s --retries=5 \
+  CMD curl --fail --silent http://localhost:8081/ || exit 1
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]
